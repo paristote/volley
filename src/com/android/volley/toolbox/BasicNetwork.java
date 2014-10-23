@@ -16,6 +16,22 @@
 
 package com.android.volley.toolbox;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.impl.cookie.DateUtils;
+
 import android.os.SystemClock;
 
 import com.android.volley.AuthFailureError;
@@ -30,22 +46,6 @@ import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
-
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.impl.cookie.DateUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A network performing Volley requests over an {@link HttpStack}.
@@ -85,10 +85,10 @@ public class BasicNetwork implements Network {
         while (true) {
             HttpResponse httpResponse = null;
             byte[] responseContents = null;
-            Map<String, String> responseHeaders = new HashMap<String, String>();
+            List<com.android.volley.toolbox.Header> responseHeaders = new ArrayList<com.android.volley.toolbox.Header>();
             try {
                 // Gather headers.
-                Map<String, String> headers = new HashMap<String, String>();
+                List<com.android.volley.toolbox.Header> headers = new ArrayList<com.android.volley.toolbox.Header>();
                 addCacheHeaders(headers, request.getCacheEntry());
                 httpResponse = mHttpStack.performRequest(request, headers);
                 StatusLine statusLine = httpResponse.getStatusLine();
@@ -185,19 +185,19 @@ public class BasicNetwork implements Network {
         request.addMarker(String.format("%s-retry [timeout=%s]", logPrefix, oldTimeout));
     }
 
-    private void addCacheHeaders(Map<String, String> headers, Cache.Entry entry) {
+    private void addCacheHeaders(List<com.android.volley.toolbox.Header> headers, Cache.Entry entry) {
         // If there's no cache entry, we're done.
         if (entry == null) {
             return;
         }
 
         if (entry.etag != null) {
-            headers.put("If-None-Match", entry.etag);
+            headers.add(new com.android.volley.toolbox.Header("If-None-Match", entry.etag));
         }
 
         if (entry.serverDate > 0) {
             Date refTime = new Date(entry.serverDate);
-            headers.put("If-Modified-Since", DateUtils.formatDate(refTime));
+            headers.add(new com.android.volley.toolbox.Header("If-Modified-Since", DateUtils.formatDate(refTime)));
         }
     }
 
@@ -237,12 +237,12 @@ public class BasicNetwork implements Network {
     }
 
     /**
-     * Converts Headers[] to Map<String, String>.
+     * Converts Headers[] to List<Header>.
      */
-    private static Map<String, String> convertHeaders(Header[] headers) {
-        Map<String, String> result = new HashMap<String, String>();
+    private static List<com.android.volley.toolbox.Header> convertHeaders(Header[] headers) {
+        List<com.android.volley.toolbox.Header> result = new ArrayList<com.android.volley.toolbox.Header>();
         for (int i = 0; i < headers.length; i++) {
-            result.put(headers[i].getName(), headers[i].getValue());
+            result.add(new com.android.volley.toolbox.Header(headers[i].getName(), headers[i].getValue()));
         }
         return result;
     }

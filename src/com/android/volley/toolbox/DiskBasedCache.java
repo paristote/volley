@@ -16,11 +16,6 @@
 
 package com.android.volley.toolbox;
 
-import android.os.SystemClock;
-
-import com.android.volley.Cache;
-import com.android.volley.VolleyLog;
-
 import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
@@ -30,11 +25,17 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+
+import android.os.SystemClock;
+
+import com.android.volley.Cache;
+import com.android.volley.VolleyLog;
 
 /**
  * Cache implementation that caches files directly onto the hard disk in the specified
@@ -356,7 +357,7 @@ public class DiskBasedCache implements Cache {
         public long softTtl;
 
         /** Headers from the response resulting in this cache entry. */
-        public Map<String, String> responseHeaders;
+        public List<Header> responseHeaders;
 
         private CacheHeader() { }
 
@@ -533,27 +534,27 @@ public class DiskBasedCache implements Cache {
         return new String(b, "UTF-8");
     }
 
-    static void writeStringStringMap(Map<String, String> map, OutputStream os) throws IOException {
-        if (map != null) {
-            writeInt(os, map.size());
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                writeString(os, entry.getKey());
-                writeString(os, entry.getValue());
+    static void writeStringStringMap(List<Header> list, OutputStream os) throws IOException {
+        if (list != null) {
+            writeInt(os, list.size());
+            for (Header header : list) {
+                writeString(os, header.name);
+                writeString(os, header.value);
             }
         } else {
             writeInt(os, 0);
         }
     }
 
-    static Map<String, String> readStringStringMap(InputStream is) throws IOException {
+    static List<Header> readStringStringMap(InputStream is) throws IOException {
         int size = readInt(is);
-        Map<String, String> result = (size == 0)
-                ? Collections.<String, String>emptyMap()
-                : new HashMap<String, String>(size);
+        List<Header> result = (size == 0)
+                ? Collections.<Header>emptyList()
+                : new ArrayList<Header>(size);
         for (int i = 0; i < size; i++) {
             String key = readString(is).intern();
             String value = readString(is).intern();
-            result.put(key, value);
+            result.add(new Header(key, value));
         }
         return result;
     }

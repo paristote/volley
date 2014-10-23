@@ -16,9 +16,17 @@
 
 package com.android.volley.toolbox;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Request.Method;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -30,18 +38,9 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Request.Method;
 
 /**
  * An {@link HttpStack} based on {@link HttpURLConnection}.
@@ -85,12 +84,12 @@ public class HurlStack implements HttpStack {
     }
 
     @Override
-    public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
+    public HttpResponse performRequest(Request<?> request, List<com.android.volley.toolbox.Header> additionalHeaders)
             throws IOException, AuthFailureError {
         String url = request.getUrl();
-        HashMap<String, String> map = new HashMap<String, String>();
-        map.putAll(request.getHeaders());
-        map.putAll(additionalHeaders);
+        ArrayList<com.android.volley.toolbox.Header> list = new ArrayList<com.android.volley.toolbox.Header>();
+        list.addAll(request.getHeaders());
+        list.addAll(additionalHeaders);
         if (mUrlRewriter != null) {
             String rewritten = mUrlRewriter.rewriteUrl(url);
             if (rewritten == null) {
@@ -100,8 +99,8 @@ public class HurlStack implements HttpStack {
         }
         URL parsedUrl = new URL(url);
         HttpURLConnection connection = openConnection(parsedUrl, request);
-        for (String headerName : map.keySet()) {
-            connection.addRequestProperty(headerName, map.get(headerName));
+        for (com.android.volley.toolbox.Header header : list) {
+            connection.addRequestProperty(header.name, header.value);
         }
         setConnectionParametersForRequest(connection, request);
         // Initialize HttpResponse with data from the HttpURLConnection.
@@ -116,10 +115,12 @@ public class HurlStack implements HttpStack {
                 connection.getResponseCode(), connection.getResponseMessage());
         BasicHttpResponse response = new BasicHttpResponse(responseStatus);
         response.setEntity(entityFromConnection(connection));
-        for (Entry<String, List<String>> header : connection.getHeaderFields().entrySet()) {
-            if (header.getKey() != null) {
-                Header h = new BasicHeader(header.getKey(), header.getValue().get(0));
-                response.addHeader(h);
+        for (Entry<String, List<String>> headers : connection.getHeaderFields().entrySet()) {
+            if (headers.getKey() != null) {
+            	for (String header : headers.getValue()) {
+            		Header h = new BasicHeader(headers.getKey(), header);
+                    response.addHeader(h);
+				}
             }
         }
         return response;

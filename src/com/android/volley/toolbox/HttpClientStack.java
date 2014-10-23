@@ -56,9 +56,9 @@ public class HttpClientStack implements HttpStack {
         mClient = client;
     }
 
-    private static void addHeaders(HttpUriRequest httpRequest, Map<String, String> headers) {
-        for (String key : headers.keySet()) {
-            httpRequest.setHeader(key, headers.get(key));
+    private static void addHeaders(HttpUriRequest httpRequest, List<Header> headers) {
+        for (Header header : headers) {
+            httpRequest.setHeader(header.name, header.value);
         }
     }
 
@@ -72,7 +72,7 @@ public class HttpClientStack implements HttpStack {
     }
 
     @Override
-    public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
+    public HttpResponse performRequest(Request<?> request, List<Header> additionalHeaders)
             throws IOException, AuthFailureError {
         HttpUriRequest httpRequest = createHttpRequest(request, additionalHeaders);
         addHeaders(httpRequest, additionalHeaders);
@@ -92,7 +92,7 @@ public class HttpClientStack implements HttpStack {
      */
     @SuppressWarnings("deprecation")
     /* protected */ static HttpUriRequest createHttpRequest(Request<?> request,
-            Map<String, String> additionalHeaders) throws AuthFailureError {
+            List<Header> additionalHeaders) throws AuthFailureError {
         switch (request.getMethod()) {
             case Method.DEPRECATED_GET_OR_POST: {
                 // This is the deprecated way that needs to be handled for backwards compatibility.

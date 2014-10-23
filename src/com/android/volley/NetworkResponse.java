@@ -16,10 +16,12 @@
 
 package com.android.volley;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.http.HttpStatus;
 
-import java.util.Collections;
-import java.util.Map;
+import com.android.volley.toolbox.Header;
 
 /**
  * Data and headers returned from {@link Network#performRequest(Request)}.
@@ -32,7 +34,7 @@ public class NetworkResponse {
      * @param headers Headers returned with this response, or null for none
      * @param notModified True if the server returned a 304 and the data was already in cache
      */
-    public NetworkResponse(int statusCode, byte[] data, Map<String, String> headers,
+    public NetworkResponse(int statusCode, byte[] data, List<Header> headers,
             boolean notModified) {
         this.statusCode = statusCode;
         this.data = data;
@@ -41,10 +43,10 @@ public class NetworkResponse {
     }
 
     public NetworkResponse(byte[] data) {
-        this(HttpStatus.SC_OK, data, Collections.<String, String>emptyMap(), false);
+        this(HttpStatus.SC_OK, data, Collections.<Header>emptyList(), false);
     }
 
-    public NetworkResponse(byte[] data, Map<String, String> headers) {
+    public NetworkResponse(byte[] data, List<Header> headers) {
         this(HttpStatus.SC_OK, data, headers, false);
     }
 
@@ -55,7 +57,7 @@ public class NetworkResponse {
     public final byte[] data;
 
     /** Response headers. */
-    public final Map<String, String> headers;
+    public final List<Header> headers;
 
     /** True if the server returned a 304 (Not Modified). */
     public final boolean notModified;

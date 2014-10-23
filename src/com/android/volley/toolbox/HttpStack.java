@@ -16,13 +16,13 @@
 
 package com.android.volley.toolbox;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
 
-import java.io.IOException;
-import java.util.Map;
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
 
 /**
  * An HTTP stack abstraction.
@@ -39,7 +39,7 @@ public interface HttpStack {
      *         {@link Request#getHeaders()}
      * @return the HTTP response
      */
-    public HttpResponse performRequest(Request<?> request, Map<String, String> additionalHeaders)
+    public HttpResponse performRequest(Request<?> request, List<Header> additionalHeaders)
         throws IOException, AuthFailureError;
 
 }
